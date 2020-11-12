@@ -2,16 +2,17 @@ import React from "react";
 import Select from "react-select";
 import { Formik, Form, Field, FieldArray } from "formik";
 import { TextField } from "@material-ui/core";
+import { useDispatch } from 'react-redux';
+import {
+  updateSettlement
+} from '../store/settlementSlice';
 
-const Settlement = ({ calculateSettlement }) => {
+const Settlement = ({ calculateSettlement, initialValues }) => {
+  const dispatch = useDispatch();
   return (
     <div className="col-12">
       <Formik
-        initialValues={{
-          recordName: "",
-          people: ["name1"],
-          expenses: [{ whoPayed: "name1", forWhom: ["name1"], howMany: 234 }],
-        }}
+        initialValues={initialValues}
         onSubmit={(values) =>
           calculateSettlement({
             recordName: values.recordName,
@@ -19,7 +20,10 @@ const Settlement = ({ calculateSettlement }) => {
             expenses: values.expenses,
           })
         }
-        render={({ values }) => (
+      >
+        {({ values }) => {
+          dispatch(updateSettlement({value: values})) //dodać debounce
+          return (
           <Form>
             <div className="col">Record name</div>
             <Field
@@ -30,12 +34,12 @@ const Settlement = ({ calculateSettlement }) => {
             />
             <FieldArray
               name="people"
-              render={(arrayHelpers, handleChange) => (
+              render={(arrayHelpers) => (
                 <div>
                   <div className="form-row p-2">People involved</div>
                   {values.people &&
                     values.people.length > 0 &&
-                    values.people.map((person, index) => (
+                    values.people.map((_, index) => (
                       <div key={index}>
                         <Field
                           name={`people[${index}]`}
@@ -78,7 +82,7 @@ const Settlement = ({ calculateSettlement }) => {
                   {values.expenses &&
                     values.expenses.length > 0 &&
                     values.expenses.map((expense, index) => {
-                      const forWhom = expense.forWhom.map((element) => {
+                      const forWhom = (expense.forWhom || []).map((element) => {
                         return { value: element.toLowerCase(), label: element };
                       });
                       return (
@@ -120,7 +124,7 @@ const Settlement = ({ calculateSettlement }) => {
                             type="button"
                             className="btn btn-dark"
                             onClick={() =>
-                              values.people.length > 1
+                              values.expenses.length > 1
                                 ? arrayHelpers.remove(index)
                                 : arrayHelpers.pop()
                             }
@@ -150,8 +154,8 @@ const Settlement = ({ calculateSettlement }) => {
               Save & show summary
             </button>
           </Form>
-        )}
-      />
+        )}}
+      </Formik>
     </div>
   );
 };
@@ -173,7 +177,8 @@ function FormikTextField(props) {
 
 const SelectField = ({ options, field, form, ...restProps }) => {
   const setFieldValue = (option) => {
-    form.setFieldValue(field.name, option?.map(({ value }) => value) || []);
+    const value = Array.isArray(option) ?  option?.map(({ value }) => value) || [] : option?.value || ""
+    form.setFieldValue(field.name, value);
   };
   return (
     <Select

@@ -1,6 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import Router from "next/router";
+import { useSelector } from 'react-redux';
+import {
+  selectSingleSettlement
+} from '../../store/settlementSlice';
 
 import SettlementForm from "../../components/SettlementForm";
 import calculate from "../../utils/calculateSettlement";
@@ -17,11 +21,10 @@ const ADD_HISTORY_ITEM = gql`
 `;
 
 const NewSettlement = () => {
+  const singleSettlement = useSelector(selectSingleSettlement);
   const [addHistoryItem, { data }] = useMutation(ADD_HISTORY_ITEM);
-
-  const calculateSettlement = (props) => {
-    console.log("PROPS", props)
-    const {recordName, people, expenses} = props;
+  const calculateSettlement = () => {
+    const {recordName, people, expenses} = singleSettlement;
     const settlement = calculate(expenses);
     const historyElement = {
       name: recordName,
@@ -58,6 +61,7 @@ const NewSettlement = () => {
         <div className="row pt-5">
           <SettlementForm
           calculateSettlement={calculateSettlement}
+          initialValues={singleSettlement}
           />
         </div>
       </div>
