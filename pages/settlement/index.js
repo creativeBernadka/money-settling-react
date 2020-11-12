@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import Router from "next/router";
 
@@ -17,13 +17,11 @@ const ADD_HISTORY_ITEM = gql`
 `;
 
 const NewSettlement = () => {
-  const [people, setPeople] = useState([]);
-  const [recordName, setRecordName] = useState("");
-  const [expenses, setExpenses] = useState([]);
-
   const [addHistoryItem, { data }] = useMutation(ADD_HISTORY_ITEM);
 
-  const calculateSettlement = () => {
+  const calculateSettlement = (props) => {
+    console.log("PROPS", props)
+    const {recordName, people, expenses} = props;
     const settlement = calculate(expenses);
     const historyElement = {
       name: recordName,
@@ -59,12 +57,7 @@ const NewSettlement = () => {
       <div className="container">
         <div className="row pt-5">
           <SettlementForm
-            people={people}
-            setPeople={setPeople}
-            recordName={recordName}
-            setRecordName={setRecordName}
-            expenses={expenses}
-            setExpenses={setExpenses}
+          calculateSettlement={calculateSettlement}
           />
         </div>
       </div>
