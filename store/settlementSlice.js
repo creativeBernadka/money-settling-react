@@ -1,26 +1,29 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 export const settlementSlice = createSlice({
-  name: "counter",
+  name: "settlement",
   initialState: {
     singleSettlement: {
-      recordName: "test",
-      people: ["name1"],
-      expenses: [{ whoPayed: "name1", forWhom: ["name1"], howMany: 234 }],
+      recordName: "",
+      people: [],
+      expenses: [],
     },
   },
   reducers: {
     updateSettlement: (state, action) => {
-        console.log("UPDATING")
       state.singleSettlement = action.payload.value;
     },
-    incrementByTwo: (state, action) => {
-      state.value += action.payload.value;
-    },
+    cleanSingleSettlement: (state) => {
+      state.singleSettlement = {
+        recordName: "",
+        people: [],
+        expenses: [],
+      }
+    }
   },
 });
 
-export const { updateSettlement } = settlementSlice.actions;
+export const { updateSettlement, cleanSingleSettlement } = settlementSlice.actions;
 
 export const selectSingleSettlement = (state) => state.settlement.singleSettlement;
 

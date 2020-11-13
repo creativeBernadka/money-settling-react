@@ -13,16 +13,13 @@ const Settlement = ({ calculateSettlement, initialValues }) => {
     <div className="col-12">
       <Formik
         initialValues={initialValues}
-        onSubmit={(values) =>
-          calculateSettlement({
-            recordName: values.recordName,
-            people: values.people,
-            expenses: values.expenses,
-          })
+        enableReinitialize={true}
+        onSubmit={(values) =>{
+          calculateSettlement(values)}
         }
       >
         {({ values }) => {
-          dispatch(updateSettlement({value: values})) //dodać debounce
+          // dispatch(updateSettlement({value: values})) //dodać debounce
           return (
           <Form>
             <div className="col">Record name</div>
@@ -117,6 +114,7 @@ const Settlement = ({ calculateSettlement, initialValues }) => {
                               className="form-control"
                               name={`expenses[${index}].howMany`}
                               label=""
+                              type="number"
                               component={FormikTextField}
                             />
                           </div>
@@ -177,7 +175,7 @@ function FormikTextField(props) {
 
 const SelectField = ({ options, field, form, ...restProps }) => {
   const setFieldValue = (option) => {
-    const value = Array.isArray(option) ?  option?.map(({ value }) => value) || [] : option?.value || ""
+    const value = Array.isArray(option) ? option?.map(({ value }) => value) || [] : option?.value || ""
     form.setFieldValue(field.name, value);
   };
   return (
