@@ -5,11 +5,13 @@ import Link from "next/link";
 
 const HISTORY = gql`
   {
-    history {
-      id
+    history_elements {
+    id
+    name
+    nick_names {
       name
-      nickNames
     }
+  }
   }
 `;
 
@@ -28,7 +30,7 @@ const Home = () => {
         {error && <p>Error: {JSON.stringify(error)}</p>}
         <div className="row">
           <div className="col-12">
-            {data?.history.map((item) => (
+            {data?.history_elements.map((item) => (
               <HistoryItem item={item} key={item.id} />
             ))}
           </div>

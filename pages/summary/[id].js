@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 
 import { gql } from "apollo-boost";
 import { useQuery } from "@apollo/client";
 
 const GET_SUMMARY_ITEM = gql`
-  query getHistoryItem($id: ID!) {
-    historyItem(id: $id) {
+  query getHistoryItem($id: Int!) {
+    history_elements_by_pk(id: $id) {
       id
       name
-      summary {
-        whoPays
-        whomPays
-        howMany
+      settlements {
+        who_pays {
+          name
+        }
+        whom_pays {
+          name
+        }
+        how_many
       }
     }
   }
@@ -23,7 +27,7 @@ const Summary = ({ id }) => {
     variables: { id: id },
   });
   let displayedItems = 0;
-  console.log(data?.historyItem?.payments);
+  console.log(data?.history_elements_by_pk?.payments);
   return (
     <div>
       <nav className="navbar sticky-top navbar-expand-lg navbar-light bg-light">
@@ -37,7 +41,7 @@ const Summary = ({ id }) => {
       </nav>
       <div className="container">
         <div className="row pt-5 pb-5">
-          {data && <h2>{data?.historyItem?.name}</h2>}
+          {data && <h2>{data?.history_elements_by_pk?.name}</h2>}
         </div>
         <div className="row">{loading && <p>Loading...</p>}</div>
         {data && (
@@ -47,16 +51,16 @@ const Summary = ({ id }) => {
               <div className="col-4">To whom</div>
               <div className="col-4">How many</div>
             </div>
-            {data?.historyItem?.summary?.map(
-              ({ whoPays, whomPays, howMany }) => {
-                if (howMany > 0) {
+            {data?.history_elements_by_pk?.settlements?.map(
+              ({ who_pays, whom_pays, how_many }) => {
+                if (how_many > 0) {
                   displayedItems += 1;
                   const backgroundClass = displayedItems % 2 ? "bg-light" : "";
                   return (
                     <div className={`row ${backgroundClass} p-2 rounded`}>
-                      <div className="col-4">{whoPays}</div>
-                      <div className="col-4">{whomPays}</div>
-                      <div className="col-4">{howMany.toFixed(2)}</div>
+                      <div className="col-4">{who_pays.name}</div>
+                      <div className="col-4">{whom_pays.name}</div>
+                      <div className="col-4">{how_many.toFixed(2)}</div>
                     </div>
                   );
                 }

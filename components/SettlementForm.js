@@ -1,59 +1,22 @@
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import Select from "react-select";
 
+import { emptyPayment } from "../pages/settlement";
+
 const Settlement = ({
-  people,
-  setPeople,
-  recordName,
-  setRecordName,
-  expenses,
-  setExpenses,
+  values,
+  handleChange,
+  setFieldValue,
+  nickNames,
+  payments,
 }) => {
-  const [whoPayed, setWhoPayed] = useState("");
-  const [forWhomPayed, setForWhomPayed] = useState("");
-
-  const addNewPerson = () => {
-    setPeople([...people, document.getElementById("input0").value]);
-    document.getElementById("input0").value = [];
-  };
-
-  const personNameChange = (value, index) => {
-    const peopleCopy = [...people];
-    peopleCopy[index] = value;
-    setPeople(peopleCopy);
-    console.log("PEOPLE", people)
-  };
-
-  const addNewExpense = () => {
-    const newExpense = {
-      whoPayed: whoPayed.label,
-      forWhom: forWhomPayed.map((option) => option.label),
-      howMany: parseFloat(document.getElementById("howMany").value),
-    };
-    setExpenses([...expenses, newExpense]);
-    document.getElementById("howMany").value = [];
-    setWhoPayed("");
-    setForWhomPayed("");
-  };
-
-  const handleWhoPayed = (option, index) => {
-    const expensesCopy = [...expenses];
-    expensesCopy[index].whoPayed = option.label;
-    setExpenses(expensesCopy);
-  };
-
-  const handleForWhomPayed = (options, index) => {
-    const expensesCopy = [...expenses];
-    expensesCopy[index].forWhom = options.map((option) => option.label);
-    setExpenses(expensesCopy);
-  };
-
-  const handleHowMany = (option, index) => {
-    const expensesCopy = [...expenses];
-    expensesCopy[index].howMany = parseFloat(option);
-    setExpenses(expensesCopy);
-  };
-
+  const peopleOptions = useMemo(
+    () =>
+      nickNames.map(({ name }) => {
+        return { value: name.toLowerCase(), label: name };
+      }),
+    [nickNames]
+  );
   return (
     <div className="col-12">
       <div className="form-row p-2">
@@ -63,114 +26,105 @@ const Settlement = ({
             type="text"
             className="form-control"
             placeholder="name"
-            value={recordName}
-            onChange={(event) => setRecordName(event.target.value)}
+            name="name"
+            value={values.name}
+            onChange={handleChange}
           />
         </div>
       </div>
       <div className="form-row p-2">People involved</div>
-      {people.map((person, index) => (
-        <div className="form-row p-2" key={person}>
+      {nickNames?.map(({ name }, index) => (
+        <div className="form-row p-2" key={index}>
           <div className="col">
             <input
               type="text"
               className="form-control"
               placeholder="name"
-              value={person}
-              onChange={(event) => personNameChange(event.target.value, index)}
+              name={`nick_names[${index}].name`}
+              value={name}
+              onChange={handleChange}
             />
           </div>
-          <div className="col" />
+          <div className="col">
+            {index + 1 === nickNames?.length && (
+              <button
+                className="btn btn-dark"
+                onClick={() =>
+                  setFieldValue(`nick_names[${index + 1}.name]`, "")
+                }
+              >
+                +
+              </button>
+            )}
+          </div>
         </div>
       ))}
-      <div className="form-row p-2">
-        <div className="col">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="name"
-            id="input0"
-          ></input>
-        </div>
-        <div className="col">
-          <button className="btn btn-dark" onClick={() => addNewPerson()}>
-            +
-          </button>
-        </div>
-      </div>
       <div className="form-row p-2">Expenses</div>
       <div className="form-row p-2">
         <p className="col-4">Who payed?</p>
         <p className="col-4">For whom?</p>
         <p className="col-3">How much?</p>
       </div>
-      {expenses.map((expense, index) => {
+      {payments?.map((payment, index) => {
         const who = {
-          value: expense.whoPayed.toLowerCase(),
-          label: expense.whoPayed,
+          value: payment.who_payed?.name?.toLowerCase(),
+          label: payment.who_payed?.name,
         };
-        const forWhom = expense.forWhom.map((element) => {
-          return { value: element.toLowerCase(), label: element };
+        const forWhom = payment.for_whom?.map(({ single_user: { name } }) => {
+          return name && { value: name.toLowerCase(), label: name };
         });
         return (
           <div className="form-row p-2">
             <Select
               className="col-4"
-              defaultValue={who}
-              onChange={(option) => handleWhoPayed(option, index)}
-              options={people.map((person) => {
-                return { value: person.toLowerCase(), label: person };
-              })}
+              value={who}
+              onChange={(option) => {
+                setFieldValue(
+                  `payments[${index}].who_payed.name`,
+                  option.label
+                );
+              }}
+              options={peopleOptions}
             />
             <Select
               closeMenuOnSelect={false}
               className="col-4"
-              defaultValue={forWhom}
-              onChange={(options) => handleForWhomPayed(options, index)}
+              value={forWhom}
+              onChange={(options) => {
+                options.forEach((option, optionIndex) => {
+                  setFieldValue(
+                    `payments[${index}].for_whom[${optionIndex}].single_user.name`,
+                    option.label
+                  );
+                });
+              }}
               isMulti
-              options={people.map((person) => {
-                return { value: person.toLowerCase(), label: person };
-              })}
+              options={peopleOptions}
             />
             <div className="col-3">
               <input
                 type="number"
                 className="form-control"
-                value={expense.howMany}
-                onChange={(event) => handleHowMany(event.target.value, index)}
+                value={payment.how_many}
+                name={`payments[${index}].how_many`}
+                onChange={handleChange}
               />
+            </div>
+            <div className="col">
+              {index + 1 === payments.length && (
+                <button
+                  className="btn btn-dark"
+                  onClick={() =>
+                    setFieldValue(`payments[${index + 1}]`, emptyPayment)
+                  }
+                >
+                  +
+                </button>
+              )}
             </div>
           </div>
         );
       })}
-      <div className="form-row p-2">
-        <Select
-          className="col-4"
-          value={whoPayed}
-          onChange={(option) => setWhoPayed(option)}
-          options={people.map((person) => {
-            return { value: person.toLowerCase(), label: person };
-          })}
-        />
-        <Select
-          closeMenuOnSelect={false}
-          className="col-4"
-          value={forWhomPayed}
-          onChange={(option) => setForWhomPayed(option)}
-          isMulti
-          options={people.map((person) => {
-            return { value: person.toLowerCase(), label: person };
-          })}
-        />
-        <div className="col-3">
-          <input type="number" className="form-control" id="howMany" />
-        </div>
-        <div className="col">
-          <button className="btn btn-dark" onClick={() => addNewExpense()}>
-            +
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

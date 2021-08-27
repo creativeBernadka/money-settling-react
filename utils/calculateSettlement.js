@@ -1,22 +1,22 @@
 const calculate = (expenses, people) => {
   const borrowersArray = [];
-  expenses.forEach((settlingModel) => {
-    settlingModel.forWhom.forEach((person) => {
+  expenses.forEach(({for_whom, who_payed, how_many}) => {
+    for_whom.forEach((person) => {
       let borrower = borrowersArray.find((resultModel) => {
         return (
           resultModel.whoBorrowed === person &&
-          resultModel.fromWhomBorrowed === settlingModel.whoPayed
+          resultModel.fromWhomBorrowed === who_payed
         );
       });
 
       if (borrower) {
         borrower.howMany +=
-          settlingModel.howMany / settlingModel.forWhom.length;
+          how_many / for_whom.length;
       } else {
         borrower = {
           whoBorrowed: person,
-          fromWhomBorrowed: settlingModel.whoPayed,
-          howMany: settlingModel.howMany / settlingModel.forWhom.length,
+          fromWhomBorrowed: who_payed,
+          howMany: how_many / for_whom.length,
         };
         borrowersArray.push(borrower);
       }

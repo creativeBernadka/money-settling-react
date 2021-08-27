@@ -7,8 +7,8 @@ const HistoryItem = ({ item }) => {
       <h6 className="card-subtitle mb-2 text-muted">Participants:</h6>
       <div className="card-text">
         <div className="d-flex flex-row">
-          {item.nickNames.map((nick) => (
-            <p className="mr-3">{nick}</p>
+          {item.nick_names.map(({ name }) => (
+            <p className="mr-3">{name}</p>
           ))}
         </div>
         <div className="d-flex flex-row">

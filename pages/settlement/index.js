@@ -1,49 +1,73 @@
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import Router from "next/router";
-
-import SettlementForm from "../../components/SettlementForm";
-import calculate from "../../utils/calculateSettlement";
+import { useFormik } from "formik";
 import { gql } from "apollo-boost";
 import { useMutation } from "@apollo/client";
 
+import SettlementForm from "../../components/SettlementForm";
+import calculate from "../../utils/calculateSettlement";
+
 const ADD_HISTORY_ITEM = gql`
-  mutation insertHistoryItem($historyElement: HistoryElementInput) {
-    insertHistoryItem(historyElement: $historyElement) {
+  mutation insertHistoryItem($object: history_elements_insert_input!) {
+    insert_history_elements_one(object: $object) {
       id
       name
     }
   }
 `;
 
+export const emptyPayment = {
+  how_many: 0,
+  who_payed: { name: "" },
+  for_whom: [{ single_user: { name: "" } }],
+};
+
 const NewSettlement = () => {
-  const [people, setPeople] = useState([]);
-  const [recordName, setRecordName] = useState("");
-  const [expenses, setExpenses] = useState([]);
+  const [addHistoryItem] = useMutation(ADD_HISTORY_ITEM);
 
-  const [addHistoryItem, { data }] = useMutation(ADD_HISTORY_ITEM);
-
-  const calculateSettlement = () => {
-    const settlement = calculate(expenses);
-    const historyElement = {
-      name: recordName,
-      nickNames: people,
-      payments: expenses,
-      summary: settlement.map((payment) => {
+  const { values, handleChange, setFieldValue, handleSubmit } = useFormik({
+    initialValues: {
+      name: "",
+      nick_names: [{ name: "" }],
+      payments: [emptyPayment],
+    },
+    onSubmit: (values) => {
+      const settlement = calculate(values.payments);
+      const fullPayments = values.payments.map(
+        ({ who_payed, for_whom, how_many }) => ({
+          how_many,
+          who_payed: { data: who_payed },
+          for_whom: {
+            data: for_whom.map(({ single_user }) => ({
+              single_user: { data: single_user },
+            })),
+          },
+        })
+      );
+      const fullSettlements = settlement.map((payment) => {
         return {
-          whoPays: payment.whoBorrowed,
-          whomPays: payment.fromWhomBorrowed,
-          howMany: payment.howMany,
+          who_pays: { data: { name: payment.whoBorrowed.single_user.name } },
+          whom_pays: { data: { name: payment.fromWhomBorrowed.name } },
+          how_many: payment.howMany,
         };
-      }),
-    };
-    addHistoryItem({ variables: { historyElement: historyElement } }).then(
-      (res) => {
-        Router.push("/summary/[id]", `/summary/${res.data.insertHistoryItem.id}`);
-      }
-    );
-  };
-  console.log(data);
+      });
+      const historyElement = {
+        name: values.name,
+        nick_names: { data: values.nick_names },
+        payments: { data: fullPayments },
+        settlements: {
+          data: fullSettlements,
+        },
+      };
+      addHistoryItem({ variables: { object: historyElement } }).then((res) => {
+        Router.push(
+          "/summary/[id]",
+          `/summary/${res.data.insert_history_elements_one.id}`
+        );
+      });
+    },
+  });
 
   return (
     <div>
@@ -52,19 +76,18 @@ const NewSettlement = () => {
         <Link href="/">
           <a className="btn btn-dark mr-2">History</a>
         </Link>
-        <button className="btn btn-dark" onClick={() => calculateSettlement()}>
+        <button className="btn btn-dark" onClick={handleSubmit} type="submit">
           Summary
         </button>
       </nav>
       <div className="container">
         <div className="row pt-5">
           <SettlementForm
-            people={people}
-            setPeople={setPeople}
-            recordName={recordName}
-            setRecordName={setRecordName}
-            expenses={expenses}
-            setExpenses={setExpenses}
+            values={values}
+            handleChange={handleChange}
+            setFieldValue={setFieldValue}
+            nickNames={values.nick_names}
+            payments={values.payments}
           />
         </div>
       </div>

@@ -1,5 +1,9 @@
 import ApolloClient from 'apollo-boost';
 
 export default new ApolloClient({
-  uri: 'http://192.168.1.198:3000/graphql',
+  uri: process.env.HASURA_GRAPHQL,
+  headers: {
+    'Access-Control-Allow-Origin': '*',
+    'x-hasura-admin-secret': process.env.HASURA_TOKEN,
+  }
 });
